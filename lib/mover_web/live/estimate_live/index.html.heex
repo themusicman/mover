@@ -1,0 +1,46 @@
+<.header>
+  Listing Estimates
+  <:actions>
+    <.link patch={~p"/estimates/new"}>
+      <.button>New Estimate</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="estimates"
+  rows={@streams.estimates}
+  row_click={fn {_id, estimate} -> JS.navigate(~p"/estimates/#{estimate}") end}
+>
+  <:col :let={{_id, estimate}} label="Origin zip"><%= estimate.origin_zip %></:col>
+  <:col :let={{_id, estimate}} label="Destination zip"><%= estimate.destination_zip %></:col>
+  <:col :let={{_id, estimate}} label="Distance"><%= estimate.distance %></:col>
+  <:col :let={{_id, estimate}} label="Standard rate"><%= estimate.standard_rate %></:col>
+  <:col :let={{_id, estimate}} label="Cost adjustment"><%= estimate.cost_adjustment %></:col>
+  <:col :let={{_id, estimate}} label="Cost"><%= estimate.cost %></:col>
+  <:action :let={{_id, estimate}}>
+    <div class="sr-only">
+      <.link navigate={~p"/estimates/#{estimate}"}>Show</.link>
+    </div>
+    <.link patch={~p"/estimates/#{estimate}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, estimate}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: estimate.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="estimate-modal" show on_cancel={JS.patch(~p"/estimates")}>
+  <.live_component
+    module={MoverWeb.EstimateLive.FormComponent}
+    id={@estimate.id || :new}
+    title={@page_title}
+    action={@live_action}
+    estimate={@estimate}
+    patch={~p"/estimates"}
+  />
+</.modal>
