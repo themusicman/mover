@@ -54,7 +54,8 @@ defmodule Mover.MixProject do
       {:req, "~> 0.4.0"},
       {:flamel, ">= 0.0.0"},
       {:money, "~> 1.12"},
-      {:mimic, "~> 1.7", only: :test}
+      {:mimic, "~> 1.7", only: :test},
+      {:credo, "~> 1.7", only: [:dev, :test], runtime: false}
     ]
   end
 

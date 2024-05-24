@@ -40,40 +40,43 @@ defmodule Mover.Distance do
   defp geocode_zip(%Context{halt?: true} = context, _type, _zip), do: context
 
   defp geocode_zip(%Context{} = context, type, zip) do
-    Req.get(
-      "https://maps.googleapis.com/maps/api/geocode/json?address=#{zip}&key=#{Mover.google_api_key()}"
-    )
-    |> case do
-      {:ok, %Req.Response{body: %{"results" => results}}} ->
-        case results do
-          [address | _] ->
-            location =
-              Enum.reduce(address["address_components"], %Location{}, fn component, acc ->
-                case component["types"] do
-                  ["postal_code"] ->
-                    %{acc | zip: component["long_name"]}
-
-                  ["locality", "political"] ->
-                    %{acc | city: component["long_name"]}
-
-                  ["administrative_area_level_1", "political"] ->
-                    %{acc | state: component["long_name"]}
-
-                  _ ->
-                    acc
-                end
-              end)
-
-            Context.assign(context, type, location)
-
-          _ ->
-            Context.halt!(context, "Could not geocode #{inspect(type)} '#{inspect(zip)}' zip.")
-        end
-
-      _ ->
-        Context.halt!(context, "Could not geocode #{inspect(type)} '#{inspect(zip)}' zip.")
-    end
+    "https://maps.googleapis.com/maps/api/geocode/json?address=#{zip}&key=#{Mover.google_api_key()}"
+    |> Req.get()
+    |> handle_geocode_response(context, type, zip)
   end
+
+  defp handle_geocode_response(
+         {:ok, %Req.Response{body: %{"results" => [address | _]}}},
+         context,
+         type,
+         _zip
+       ) do
+    location =
+      Enum.reduce(address["address_components"], %Location{}, &handle_component_type(&1, &2))
+
+    Context.assign(context, type, location)
+  end
+
+  defp handle_geocode_response(_response, context, type, zip) do
+    Context.halt!(context, "Could not geocode #{inspect(type)} '#{inspect(zip)}' zip.")
+  end
+
+  defp handle_component_type(%{"types" => ["postal_code"], "long_name" => long_name}, acc),
+    do: %{acc | zip: long_name}
+
+  defp handle_component_type(
+         %{"types" => ["locality", "political"], "long_name" => long_name},
+         acc
+       ),
+       do: %{acc | city: long_name}
+
+  defp handle_component_type(
+         %{"types" => ["administrative_area_level_1", "political"], "long_name" => long_name},
+         acc
+       ),
+       do: %{acc | state: long_name}
+
+  defp handle_component_type(_component, acc), do: acc
 
   defp calculate_distance(%Context{halt?: true} = context), do: context
 

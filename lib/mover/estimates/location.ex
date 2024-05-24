@@ -1,4 +1,7 @@
 defmodule Mover.Estimates.Location do
+  @moduledoc """
+  A physical location
+  """
   use Ecto.Schema
   import Ecto.Changeset
   import Mover.Validators, only: [validate_zip: 2]
@@ -44,19 +47,16 @@ defmodule Mover.Estimates.Location do
         [{:city, location.city}, {:state, location.state}, {:zip, location.zip}],
         "",
         fn {type, value}, acc ->
-          if Flamel.present?(value) do
-            case type do
-              :city -> acc <> value
-              # TODO: fix the issue if the city is missing but the state is not
-              :state -> acc <> ", " <> value
-              :zip -> acc <> " " <> value
-            end
-          else
-            acc
-          end
+          if Flamel.present?(value), do: append_component(type, acc, value), else: acc
         end
       )
       |> String.trim()
     end
+
+    defp append_component(:city, acc, value), do: acc <> value
+    # fix issue where if there is no city we will have an un-needed comma
+    defp append_component(:state, acc, value), do: acc <> ", " <> value
+    defp append_component(:zip, acc, value), do: acc <> " " <> value
+    defp append_component(_type, acc, _value), do: acc
   end
 end

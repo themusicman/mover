@@ -1,3 +1,4 @@
+# credo:disable-for-this-file
 defmodule Mover.DistanceTest do
   use Mover.DataCase
   use Mimic.DSL
