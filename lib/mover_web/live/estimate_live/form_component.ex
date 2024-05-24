@@ -2,6 +2,7 @@ defmodule MoverWeb.EstimateLive.FormComponent do
   use MoverWeb, :live_component
 
   alias Mover.Estimates
+  alias Phoenix.PubSub
 
   @impl true
   def render(assigns) do
@@ -19,14 +20,23 @@ defmodule MoverWeb.EstimateLive.FormComponent do
         phx-change="validate"
         phx-submit="save"
       >
-        <.input field={@form[:origin_zip]} type="text" label="Origin zip" />
-        <.input field={@form[:destination_zip]} type="text" label="Destination zip" />
-        <.input field={@form[:distance]} type="number" label="Distance" />
-        <.input field={@form[:standard_rate]} type="number" label="Standard rate" />
-        <.input field={@form[:cost_adjustment]} type="number" label="Cost adjustment" step="any" />
-        <.input field={@form[:cost]} type="number" label="Cost" />
+        <.inputs_for :let={f_origin} field={@form[:origin]}>
+          <.input field={f_origin[:zip]} type="number" label="Origin zip" />
+        </.inputs_for>
+
+        <.inputs_for :let={f_destination} field={@form[:destination]}>
+          <.input field={f_destination[:zip]} type="number" label="Destination zip" />
+        </.inputs_for>
+
+        <.input
+          prompt="Pick one"
+          field={@form[:cost_adjustment]}
+          type="select"
+          options={Mover.Estimates.cost_adjustments()}
+          label="Size of move"
+        />
         <:actions>
-          <.button phx-disable-with="Saving...">Save Estimate</.button>
+          <.button phx-disable-with="Saving...">Get Estimate</.button>
         </:actions>
       </.simple_form>
     </div>
@@ -57,25 +67,17 @@ defmodule MoverWeb.EstimateLive.FormComponent do
     save_estimate(socket, socket.assigns.action, estimate_params)
   end
 
-  defp save_estimate(socket, :edit, estimate_params) do
-    case Estimates.update_estimate(socket.assigns.estimate, estimate_params) do
-      {:ok, estimate} ->
-        notify_parent({:saved, estimate})
-
-        {:noreply,
-         socket
-         |> put_flash(:info, "Estimate updated successfully")
-         |> push_patch(to: socket.assigns.patch)}
-
-      {:error, %Ecto.Changeset{} = changeset} ->
-        {:noreply, assign_form(socket, changeset)}
-    end
-  end
-
   defp save_estimate(socket, :new, estimate_params) do
+    estimate_params = Map.put(estimate_params, "standard_rate", Mover.Estimates.standard_rate())
+
     case Estimates.create_estimate(estimate_params) do
       {:ok, estimate} ->
         notify_parent({:saved, estimate})
+
+        Flamel.Task.background(fn ->
+          updated_estimate = Mover.Estimates.update_cost(estimate)
+          PubSub.broadcast(Mover.PubSub, "estimates", {:estimate_updated, updated_estimate})
+        end)
 
         {:noreply,
          socket

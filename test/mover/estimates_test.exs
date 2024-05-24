@@ -9,8 +9,8 @@ defmodule Mover.EstimatesTest do
     import Mover.EstimatesFixtures
 
     @invalid_attrs %{
-      origin_zip: nil,
-      destination_zip: nil,
+      origin: %{zip: nil},
+      destination: %{zip: nil},
       distance: nil,
       standard_rate: nil,
       cost_adjustment: nil,
@@ -29,21 +29,17 @@ defmodule Mover.EstimatesTest do
 
     test "create_estimate/1 with valid data creates a estimate" do
       valid_attrs = %{
-        origin_zip: "some origin_zip",
-        destination_zip: "some destination_zip",
-        distance: 42,
+        origin: %{zip: "32738"},
+        destination: %{zip: "32003"},
         standard_rate: 42,
-        cost_adjustment: 120.5,
-        cost: 42
+        cost_adjustment: 120.5
       }
 
       assert {:ok, %Estimate{} = estimate} = Estimates.create_estimate(valid_attrs)
-      assert estimate.origin_zip == "some origin_zip"
-      assert estimate.destination_zip == "some destination_zip"
-      assert estimate.distance == 42
+      assert estimate.origin.zip == "32738"
+      assert estimate.destination.zip == "32003"
       assert estimate.standard_rate == 42
       assert estimate.cost_adjustment == 120.5
-      assert estimate.cost == 42
     end
 
     test "create_estimate/1 with invalid data returns error changeset" do
@@ -54,8 +50,13 @@ defmodule Mover.EstimatesTest do
       estimate = estimate_fixture()
 
       update_attrs = %{
-        origin_zip: "some updated origin_zip",
-        destination_zip: "some updated destination_zip",
+        origin: %{id: estimate.origin.id, zip: "90210", city: "Somewhere", state: "CA"},
+        destination: %{
+          id: estimate.destination.id,
+          zip: "60611",
+          city: "Another Place",
+          state: "TN"
+        },
         distance: 43,
         standard_rate: 43,
         cost_adjustment: 456.7,
@@ -63,12 +64,12 @@ defmodule Mover.EstimatesTest do
       }
 
       assert {:ok, %Estimate{} = estimate} = Estimates.update_estimate(estimate, update_attrs)
-      assert estimate.origin_zip == "some updated origin_zip"
-      assert estimate.destination_zip == "some updated destination_zip"
+      assert estimate.origin.zip == "90210"
+      assert estimate.destination.zip == "60611"
       assert estimate.distance == 43
       assert estimate.standard_rate == 43
       assert estimate.cost_adjustment == 456.7
-      assert estimate.cost == 43
+      assert estimate.cost == %Money{amount: 43, currency: :USD}
     end
 
     test "update_estimate/2 with invalid data returns error changeset" do

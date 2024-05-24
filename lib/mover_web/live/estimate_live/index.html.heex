@@ -1,7 +1,7 @@
 <.header>
   Listing Estimates
   <:actions>
-    <.link patch={~p"/estimates/new"}>
+    <.link patch={~p"/new"}>
       <.button>New Estimate</.button>
     </.link>
   </:actions>
@@ -10,20 +10,30 @@
 <.table
   id="estimates"
   rows={@streams.estimates}
-  row_click={fn {_id, estimate} -> JS.navigate(~p"/estimates/#{estimate}") end}
 >
-  <:col :let={{_id, estimate}} label="Origin zip"><%= estimate.origin_zip %></:col>
-  <:col :let={{_id, estimate}} label="Destination zip"><%= estimate.destination_zip %></:col>
-  <:col :let={{_id, estimate}} label="Distance"><%= estimate.distance %></:col>
-  <:col :let={{_id, estimate}} label="Standard rate"><%= estimate.standard_rate %></:col>
-  <:col :let={{_id, estimate}} label="Cost adjustment"><%= estimate.cost_adjustment %></:col>
-  <:col :let={{_id, estimate}} label="Cost"><%= estimate.cost %></:col>
-  <:action :let={{_id, estimate}}>
-    <div class="sr-only">
-      <.link navigate={~p"/estimates/#{estimate}"}>Show</.link>
-    </div>
-    <.link patch={~p"/estimates/#{estimate}/edit"}>Edit</.link>
-  </:action>
+
+  <:col :let={{_id, estimate}} label="Status">
+    <.spinner :if={estimate.status == :calculating} />
+    <.icon name="hero-shield-check" :if={estimate.status == :complete} />
+    <.icon name="hero-shield-exclamation" :if={estimate.status == :failed} />
+    <%= estimate.status %>
+  </:col>
+  <:col :let={{_id, estimate}} label="Origin">
+    <%= estimate.origin %>
+  </:col>
+  <:col :let={{_id, estimate}} label="Destination">
+    <%= estimate.destination %>
+  </:col>
+  <:col :let={{_id, estimate}} label="Distance">
+    <.spinner :if={estimate.status == :calculating} />
+    <.icon name="hero-x-mark" :if={estimate.status == :failed} />
+    <span :if={estimate.status == :complete}><%= estimate.distance %> miles</span>
+  </:col>
+  <:col :let={{_id, estimate}} label="Cost">
+    <.spinner :if={estimate.status == :calculating} />
+    <.icon name="hero-x-mark" :if={estimate.status == :failed} />
+    <%= estimate.cost %>
+  </:col>
   <:action :let={{id, estimate}}>
     <.link
       phx-click={JS.push("delete", value: %{id: estimate.id}) |> hide("##{id}")}
@@ -34,13 +44,13 @@
   </:action>
 </.table>
 
-<.modal :if={@live_action in [:new, :edit]} id="estimate-modal" show on_cancel={JS.patch(~p"/estimates")}>
+<.modal :if={@live_action in [:new, :edit]} id="estimate-modal" show on_cancel={JS.patch(~p"/")}>
   <.live_component
     module={MoverWeb.EstimateLive.FormComponent}
     id={@estimate.id || :new}
     title={@page_title}
     action={@live_action}
     estimate={@estimate}
-    patch={~p"/estimates"}
+    patch={~p"/"}
   />
 </.modal>

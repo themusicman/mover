@@ -17,10 +17,8 @@ defmodule MoverWeb.Router do
   scope "/", MoverWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
-
-    live "/estimates", EstimateLive.Index, :index
-    live "/estimates/new", EstimateLive.Index, :new
+    live "/", EstimateLive.Index, :index
+    live "/new", EstimateLive.Index, :new
   end
 
   # Other scopes may use custom stacks.

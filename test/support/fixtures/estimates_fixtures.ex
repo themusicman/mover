@@ -11,11 +11,9 @@ defmodule Mover.EstimatesFixtures do
     {:ok, estimate} =
       attrs
       |> Enum.into(%{
-        cost: 42,
         cost_adjustment: 120.5,
-        destination_zip: "some destination_zip",
-        distance: 42,
-        origin_zip: "some origin_zip",
+        destination: %{zip: "32003"},
+        origin: %{zip: "32738"},
         standard_rate: 42
       })
       |> Mover.Estimates.create_estimate()

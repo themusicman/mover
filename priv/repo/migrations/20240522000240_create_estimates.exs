@@ -6,7 +6,7 @@ defmodule Mover.Repo.Migrations.CreateEstimates do
       add :origin_zip, :string
       add :destination_zip, :string
       add :distance, :integer
-      add :standard_rate, :integer
+      add :standard_rate, :float
       add :cost_adjustment, :float
       add :cost, :integer
 

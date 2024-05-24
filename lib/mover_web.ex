@@ -87,6 +87,8 @@ defmodule MoverWeb do
       import MoverWeb.CoreComponents
       import MoverWeb.Gettext
 
+      import MoverWeb.AppComponents
+
       # Shortcut for generating JS commands
       alias Phoenix.LiveView.JS
 

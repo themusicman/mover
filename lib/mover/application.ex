@@ -11,8 +11,7 @@ defmodule Mover.Application do
       MoverWeb.Telemetry,
       Mover.Repo,
       {Ecto.Migrator,
-        repos: Application.fetch_env!(:mover, :ecto_repos),
-        skip: skip_migrations?()},
+       repos: Application.fetch_env!(:mover, :ecto_repos), skip: skip_migrations?()},
       {DNSCluster, query: Application.get_env(:mover, :dns_cluster_query) || :ignore},
       {Phoenix.PubSub, name: Mover.PubSub},
       # Start the Finch HTTP client for sending emails
@@ -20,7 +19,9 @@ defmodule Mover.Application do
       # Start a worker by calling: Mover.Worker.start_link(arg)
       # {Mover.Worker, arg},
       # Start to serve requests, typically the last entry
-      MoverWeb.Endpoint
+      MoverWeb.Endpoint,
+      # Starts supervisor for Flamel background tasks
+      {Task.Supervisor, name: Flamel.Task}
     ]
 
     # See https://hexdocs.pm/elixir/Supervisor.html

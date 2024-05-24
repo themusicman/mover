@@ -5,20 +5,14 @@ defmodule MoverWeb.EstimateLiveTest do
   import Mover.EstimatesFixtures
 
   @create_attrs %{
-    origin_zip: "some origin_zip",
-    destination_zip: "some destination_zip",
-    distance: 42,
-    standard_rate: 42,
-    cost_adjustment: 120.5,
-    cost: 42
+    origin: %{zip: "32003"},
+    destination: %{zip: "32738"},
+    cost_adjustment: 0.8
   }
   @invalid_attrs %{
-    origin_zip: nil,
-    destination_zip: nil,
-    distance: nil,
-    standard_rate: nil,
-    cost_adjustment: nil,
-    cost: nil
+    origin: %{zip: nil},
+    destination: %{zip: nil},
+    cost_adjustment: nil
   }
 
   defp create_estimate(_) do
@@ -30,19 +24,19 @@ defmodule MoverWeb.EstimateLiveTest do
     setup [:create_estimate]
 
     test "lists all estimates", %{conn: conn, estimate: estimate} do
-      {:ok, _index_live, html} = live(conn, ~p"/estimates")
+      {:ok, _index_live, html} = live(conn, ~p"/")
 
       assert html =~ "Listing Estimates"
-      assert html =~ estimate.origin_zip
+      assert html =~ estimate.origin.zip
     end
 
     test "saves new estimate", %{conn: conn} do
-      {:ok, index_live, _html} = live(conn, ~p"/estimates")
+      {:ok, index_live, _html} = live(conn, ~p"/")
 
       assert index_live |> element("a", "New Estimate") |> render_click() =~
                "New Estimate"
 
-      assert_patch(index_live, ~p"/estimates/new")
+      assert_patch(index_live, ~p"/new")
 
       assert index_live
              |> form("#estimate-form", estimate: @invalid_attrs)
@@ -52,15 +46,15 @@ defmodule MoverWeb.EstimateLiveTest do
              |> form("#estimate-form", estimate: @create_attrs)
              |> render_submit()
 
-      assert_patch(index_live, ~p"/estimates")
+      assert_patch(index_live, ~p"/")
 
       html = render(index_live)
       assert html =~ "Estimate created successfully"
-      assert html =~ "some origin_zip"
+      assert html =~ "32738"
     end
 
     test "deletes estimate in listing", %{conn: conn, estimate: estimate} do
-      {:ok, index_live, _html} = live(conn, ~p"/estimates")
+      {:ok, index_live, _html} = live(conn, ~p"/")
 
       assert index_live |> element("#estimates-#{estimate.id} a", "Delete") |> render_click()
       refute has_element?(index_live, "#estimates-#{estimate.id}")
