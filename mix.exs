@@ -52,7 +52,9 @@ defmodule Mover.MixProject do
       {:dns_cluster, "~> 0.1.1"},
       {:bandit, ">= 0.0.0"},
       {:req, "~> 0.4.0"},
-      {:ex_doc, ">= 0.0.0", only: :dev, runtime: false}
+      {:flamel, ">= 0.0.0"},
+      {:money, "~> 1.12"},
+      {:mimic, "~> 1.7", only: :test}
     ]
   end
 
